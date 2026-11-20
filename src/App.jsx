@@ -1,4 +1,5 @@
 import { useState } from "react";
+import RequestRow from "./RequestRow";
 
 const initialRequests = [
   { id: 1, name: 'Reporting access', status: 'Pending' },
@@ -74,9 +75,6 @@ const normalizedQuery = searchQuery.trim().toLowerCase();
     }
   ) 
 
-  // function searchRequest(name) {
-  //   setSearchName( )
-  // }
 
   return (
     
@@ -86,6 +84,7 @@ const normalizedQuery = searchQuery.trim().toLowerCase();
   <h2 className="request-heading">Request Approval</h2>
 
   <header className="request-header">
+
    <div className="request-filter">
       <label htmlFor="">Filter by status</label>
       <select 
@@ -153,43 +152,14 @@ const normalizedQuery = searchQuery.trim().toLowerCase();
 
   { visibleRequests.map( request => (
 
-    <li className="request-row" key={request.id}>
-    <div className="request-details">
-    <span className="request-name">{request.name}</span>
-    <span className="request-status">{request.status}</span>
-
-    </div>
-
-    <div className="request-actions">
-         { request.status === 'Pending' && (
-        <button type="button"
-        onClick={ ()=> updateStatus(request.id, 'Approved')}
-        >
-        Approve
-        </button>
-  )}
-
-  {
-    request.status === 'Approved' && (
-      <button 
-      onClick={ () => updateStatus(request.id, 'Pending')}
-      >
-       Reopen
-      </button>
-    )}
-
-      <button style={ {color: "red", background: "white"}} onClick={ () => deleteRequest(request.id)}>
-      Delete
-      </button>
-    
-    </div>
+    <RequestRow
+    key={request.id}
+    request={request}
+    onStatusChange={updateStatus}
+    onDeleteRequest={deleteRequest}
 
 
-
-  
-
-
-    </li>
+    />
   ))
 
   }
