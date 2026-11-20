@@ -14,7 +14,9 @@ export default function App() {
 
   // add error state
 
-  const [error, setError] = useState('')
+  const [error, setError] = useState('');
+
+  const [statusFilter, setStatusFilter] = useState("All");
 
   // step 2 update request status 
 
@@ -58,12 +60,35 @@ export default function App() {
 
   }
 
+  const visibleRequests = requests.filter(
+    (request) => statusFilter === 'All' || request.status === statusFilter 
+  ) 
+
   return (
     
 <section className="request-panel">
   
 
-  <h2>Request Approval System</h2>
+  <h2 className="request-heading">Request Approval</h2>
+
+  <header className="request-header">
+   <div className="request-filter">
+      <label htmlFor="">Filter by status</label>
+      <select 
+      id="status-filter"
+      value={statusFilter}
+      onChange = { (event) => setStatusFilter(event.target.value)}
+      >
+        <option value="All">All</option>
+        <option value="Pending">Pending</option>
+        <option value="Approved">Approved</option>
+      </select>
+    
+    </div>
+  </header>
+
+
+
  <form onSubmit={addRequest}>
   <input 
   type="text" 
@@ -79,15 +104,30 @@ export default function App() {
     <p style={{ color: "red" }}> {error}</p>
    )}
 
-  <button type="submit"> Add Request</button>
+  <button type="submit" disabled={!requestName.trim()}> Add Request</button>
  
  </form>
   
   <h2>Request list </h2>
  
-
+ {visibleRequests.length === 0 && (
+          <p className="request-empty">
+            {requests.length === 0
+              ? 'Add a request to get started.'
+              : `No ${statusFilter.toLowerCase()} requests.`}
+          </p>
+        )}
   <ul className="request-list">
-  { requests.map( request => (
+
+   
+
+
+
+  { visibleRequests.map( request => (
+
+
+
+
     <li className="request-row" key={request.id}>
     <div className="request-details">
     <span className="request-name">{request.name}</span>
@@ -130,7 +170,9 @@ export default function App() {
   }
   </ul>
 
-  <p style={{ margin: "10px"}}> Total Requests : { requests.length} </p>
+   <p className="request-total" aria-live="polite">
+          Showing {visibleRequests.length} of {requests.length} requests
+        </p>
   
   </section>
   )

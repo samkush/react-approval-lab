@@ -5,41 +5,111 @@ button { cursor: pointer; color: white; background: #17675e; border: 0; border-r
 ul { padding: 0; list-style: none; }
 li { padding: .7rem 0; border-bottom: 1px solid #d9e4e2; }
 
-.request-panel {
-  margin-top: 24px;
-  overflow: hidden;
-  text-align: left;
-  color: #202124;
-  background: #fff;
-  border: 1px solid #d9d9d9;
-  border-radius: 16px;
+
+* {
+  box-sizing: border-box;
 }
 
-.request-panel h2 {
+body {
   margin: 0;
-  padding: 18px 20px 4px;
+  background: #f3f6f5;
+  color: #202124;
+  font-family: system-ui, sans-serif;
+}
+
+.approval-app {
+  max-width: 840px;
+  margin: 48px auto;
+  padding: 0 16px;
+}
+
+.approval-app h1 {
+  margin: 0 0 24px;
+  font-size: clamp(1.6rem, 5vw, 2rem);
+}
+
+.request-form,
+.request-header,
+.request-row,
+.request-actions,
+.request-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.request-form {
+  align-items: end;
+  margin-bottom: 24px;
+}
+
+.request-field {
+  display: grid;
+  flex: 1 1 240px;
+  gap: 6px;
+}
+
+.approval-app input,
+.approval-app select,
+.approval-app button {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #b8c0bf;
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.request-field input {
+  width: 100%;
+}
+
+.approval-app button {
+  cursor: pointer;
+}
+
+.request-form button {
+  border-color: #17675f;
+  background: #17675f;
+  color: #fff;
+}
+
+.request-form button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.request-panel {
+  border: 1px solid #d9dfde;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.request-header,
+.request-row {
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.request-header h2 {
+  margin: 0;
   font-size: 1.25rem;
 }
 
-.request-panel .request-list {
+.request-filter {
+  align-items: center;
+}
+
+.request-list {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.request-panel .request-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px 20px;
-  margin: 0;
-  padding: 20px;
-  border: 0;
-}
-
-.request-panel .request-row + .request-row {
-  border-top: 1px solid #ececec;
+.request-row {
+  border-top: 1px solid #e5e9e8;
 }
 
 .request-details {
@@ -49,51 +119,29 @@ li { padding: .7rem 0; border-bottom: 1px solid #d9e4e2; }
   overflow-wrap: anywhere;
 }
 
-.request-name {
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.request-status,
+.request-details span,
+.request-empty,
 .request-total {
-  color: #555;
+  color: #545c5b;
   font-size: 0.875rem;
 }
 
 .request-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
   margin-left: auto;
 }
 
-.request-panel .request-actions button {
-  margin: 0;
-  padding: 6px 14px;
-  color: #333;
-  background: #fff;
-  border: 1px solid #ccc;
+.request-actions button {
   border-radius: 999px;
-  font: inherit;
-  font-size: 0.875rem;
-  cursor: pointer;
 }
 
-.request-panel .request-actions button:hover {
-  background: #f4f4f4;
-}
-
-.request-panel .request-actions .delete-button {
+.request-actions .delete-button {
+  border-color: #a32230;
   color: #a32230;
-  border-color: currentColor;
 }
 
-.request-panel .request-actions .delete-button:hover {
-  background: #fff1f2;
-}
-
-.request-panel .request-total {
+.request-empty,
+.request-total {
   margin: 0;
   padding: 14px 20px;
-  border-top: 1px solid #ececec;
+  border-top: 1px solid #e5e9e8;
 }
