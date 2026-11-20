@@ -18,6 +18,8 @@ export default function App() {
 
   const [statusFilter, setStatusFilter] = useState("All");
 
+  const [searchQuery, setSearchQuery] =useState("");
+
   // step 2 update request status 
 
   function updateStatus(id, nextStatus) {
@@ -59,10 +61,22 @@ export default function App() {
     )
 
   }
-
+const normalizedQuery = searchQuery.trim().toLowerCase();
   const visibleRequests = requests.filter(
-    (request) => statusFilter === 'All' || request.status === statusFilter 
+    (request) => {
+      const matchesStatus =  statusFilter === 'All' || request.status === statusFilter ;
+      const matchesSearch = request.name
+      .toLocaleLowerCase()
+      .includes(normalizedQuery)
+
+     return matchesStatus && matchesSearch
+
+    }
   ) 
+
+  // function searchRequest(name) {
+  //   setSearchName( )
+  // }
 
   return (
     
@@ -85,7 +99,21 @@ export default function App() {
       </select>
     
     </div>
+
+    <div className="request-filter">
+     <label htmlFor="request-search">Search Requests</label>
+     <input 
+     id= 'request-search'
+     type="search"
+     placeholder="search by name"
+     value={searchQuery}
+     onChange={ (event) => setSearchQuery(event.target.value)}
+      />
+    
+    </div>
   </header>
+
+
 
 
 
@@ -111,12 +139,12 @@ export default function App() {
   <h2>Request list </h2>
  
  {visibleRequests.length === 0 && (
-          <p className="request-empty">
-            {requests.length === 0
-              ? 'Add a request to get started.'
-              : `No ${statusFilter.toLowerCase()} requests.`}
-          </p>
-        )}
+  <p className="request-empty">
+    {requests.length === 0
+      ? 'Add a request to get started.'
+      : 'No requests match your search and filter.'}
+  </p>
+)}
   <ul className="request-list">
 
    
@@ -124,9 +152,6 @@ export default function App() {
 
 
   { visibleRequests.map( request => (
-
-
-
 
     <li className="request-row" key={request.id}>
     <div className="request-details">
