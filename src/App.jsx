@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import RequestRow from "./RequestRow";
 
 const initialRequests = [
@@ -23,13 +23,19 @@ export default function App() {
 
   // step 2 update request status 
 
-  function updateStatus(id, nextStatus) {
-    setRequests( previousRequest => 
-      previousRequest.map( request => 
-        request.id === id ? { ...request , status : nextStatus} :  request
-      )
-    )
-  }
+  // function updateStatus(id, nextStatus) {
+  //   setRequests( previousRequest => 
+  //     previousRequest.map( request => 
+  //       request.id === id ? { ...request , status : nextStatus} :  request
+  //     )
+  //   )
+  // }
+
+  const updateStatus = useCallback((id, status) => {
+    setRequests( (previousRequest) => 
+    previousRequest.map( (request) => 
+    request.id === id ?  {... request, status} : request ))
+  }, [])
 
   // add new request 
   function addRequest(event) {
@@ -56,12 +62,21 @@ export default function App() {
   }
 
   // delete request 
-  function deleteRequest(id) {
-    setRequests( previousRequest => 
-      previousRequest.filter( request => request.id !== id)
-    )
+  // function deleteRequest(id) {
+  //   setRequests( previousRequest => 
+  //     previousRequest.filter( request => request.id !== id)
+  //   )
 
-  }
+  // }
+
+  const deleteRequest = useCallback( (id) => {
+    setRequests ( (previousRequest) => 
+      previousRequest.filter ( (request) => 
+        request.id !== id
+      )
+    )
+  }, [])
+
 const normalizedQuery = searchQuery.trim().toLowerCase();
   const visibleRequests = requests.filter(
     (request) => {
