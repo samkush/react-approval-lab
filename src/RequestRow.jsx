@@ -25,14 +25,7 @@ import { memo } from "react";
       onClick={ () => onDeleteRequest(request.id)}>
         Delete
       </button>
-    
     </div>
-
-
-
-  
-
-
     </li>
     )
 }

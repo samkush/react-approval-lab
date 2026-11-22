@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import RequestRow from "./RequestRow";
 
 const initialRequests = [
@@ -14,22 +14,11 @@ export default function App() {
   const [requestName, setRequestName] = useState("");
 
   // add error state
-
   const [error, setError] = useState('');
-
   const [statusFilter, setStatusFilter] = useState("All");
-
   const [searchQuery, setSearchQuery] =useState("");
 
   // step 2 update request status 
-
-  // function updateStatus(id, nextStatus) {
-  //   setRequests( previousRequest => 
-  //     previousRequest.map( request => 
-  //       request.id === id ? { ...request , status : nextStatus} :  request
-  //     )
-  //   )
-  // }
 
   const updateStatus = useCallback((id, status) => {
     setRequests( (previousRequest) => 
@@ -61,14 +50,6 @@ export default function App() {
 
   }
 
-  // delete request 
-  // function deleteRequest(id) {
-  //   setRequests( previousRequest => 
-  //     previousRequest.filter( request => request.id !== id)
-  //   )
-
-  // }
-
   const deleteRequest = useCallback( (id) => {
     setRequests ( (previousRequest) => 
       previousRequest.filter ( (request) => 
@@ -77,8 +58,11 @@ export default function App() {
     )
   }, [])
 
-const normalizedQuery = searchQuery.trim().toLowerCase();
-  const visibleRequests = requests.filter(
+  // start using useMemo for  heavy computation 
+  const visibleRequests = useMemo( () => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return requests.filter(
     (request) => {
       const matchesStatus =  statusFilter === 'All' || request.status === statusFilter ;
       const matchesSearch = request.name
@@ -91,15 +75,13 @@ const normalizedQuery = searchQuery.trim().toLowerCase();
   ) 
 
 
+  }, [requests, searchQuery, statusFilter])
+
   return (
     
 <section className="request-panel">
-  
-
   <h2 className="request-heading">Request Approval</h2>
-
   <header className="request-header">
-
    <div className="request-filter">
       <label htmlFor="">Filter by status</label>
       <select 
@@ -127,10 +109,6 @@ const normalizedQuery = searchQuery.trim().toLowerCase();
     </div>
   </header>
 
-
-
-
-
  <form onSubmit={addRequest}>
   <input 
   type="text" 
@@ -147,7 +125,6 @@ const normalizedQuery = searchQuery.trim().toLowerCase();
    )}
 
   <button type="submit" disabled={!requestName.trim()}> Add Request</button>
- 
  </form>
   
   <h2>Request list </h2>
@@ -160,20 +137,12 @@ const normalizedQuery = searchQuery.trim().toLowerCase();
   </p>
 )}
   <ul className="request-list">
-
-   
-
-
-
   { visibleRequests.map( request => (
-
     <RequestRow
     key={request.id}
     request={request}
     onStatusChange={updateStatus}
     onDeleteRequest={deleteRequest}
-
-
     />
   ))
 
@@ -183,9 +152,7 @@ const normalizedQuery = searchQuery.trim().toLowerCase();
    <p className="request-total" aria-live="polite">
           Showing {visibleRequests.length} of {requests.length} requests
         </p>
-  
   </section>
   )
-  
   
 }
