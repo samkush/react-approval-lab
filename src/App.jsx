@@ -1,5 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import RequestRow from "./RequestRow";
+import ApproverList from "./ApproverList";
+
 
 const initialRequests = [
   { id: 1, name: 'Reporting access', status: 'Pending' },
@@ -8,7 +10,32 @@ const initialRequests = [
 ];
 
 export default function App() {
-  const [requests, setRequests] = useState(initialRequests)
+  // const [requests, setRequests] = useState(initialRequests)
+
+ 
+  const [requests, setRequests] = useState( () => {
+    
+    try {
+      const savedRequests = localStorage.getItem("requests");
+
+      console.log("Loaded from localStorage:", savedRequests);
+      
+      if(savedRequests !== null) {
+        const parsedRequests = JSON.parse(savedRequests)
+
+        if(Array.isArray(parsedRequests)) {
+        return parsedRequests;
+      }
+
+      }
+
+      
+    } catch (error) {
+      console.error("Unable to load requests:", error)
+    }
+
+    return initialRequests;
+  })
 
   // state for input field
   const [requestName, setRequestName] = useState("");
@@ -17,6 +44,16 @@ export default function App() {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] =useState("");
+
+
+   useEffect( () => {
+    console.log('saving request', requests)
+    console.log("useEffect executed - saving requests");
+    localStorage.setItem("requests", 
+      JSON.stringify(requests)
+    )
+
+  }, [requests])
 
   // step 2 update request status 
 
@@ -62,6 +99,9 @@ export default function App() {
   const visibleRequests = useMemo( () => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
+
+
+
     return requests.filter(
     (request) => {
       const matchesStatus =  statusFilter === 'All' || request.status === statusFilter ;
@@ -76,6 +116,9 @@ export default function App() {
 
 
   }, [requests, searchQuery, statusFilter])
+
+
+
 
   return (
     
@@ -152,6 +195,7 @@ export default function App() {
    <p className="request-total" aria-live="polite">
           Showing {visibleRequests.length} of {requests.length} requests
         </p>
+    <ApproverList />
   </section>
   )
   
