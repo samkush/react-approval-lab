@@ -1,33 +1,99 @@
+
 import { memo } from "react";
 
- function RequestRow ({ request , onStatusChange, onDeleteRequest }) {
-    const isApproved = request.status === 'Approved';
+const RequestRow = memo(function RequestRow({
+  request,
+  approvers,
+  onUpdateStatus,
+  onDelete,
+  onAssignApprover
+}) {
+  console.log("Rendering RequestRow:", request.name);
 
-    return (
-         <li className="request-row" key={request.id}>
+  const hasApprover =
+    request.approverId !== undefined &&
+    request.approverId !== null &&
+    request.approverId !== "";
 
-        <div className="request-details">
-            <span className="request-name">{request.name}</span>
-            <span className="request-status">{request.status}</span>
+  return (
+    <div className="request-row">
+      <div className="request-details">
+        <strong>{request.name}</strong>
 
-        </div>
-
-    <div className="request-actions">
-        
-        <button type="button"
-        onClick={ ()=> onStatusChange(request.id, isApproved ? 'Pending' : 'Approved' )}
+        <span
+          className={
+            request.status === "Approved"
+              ? "status approved"
+              : "status pending"
+          }
         >
-        { isApproved ? 'Reopen' : 'Approve'}
+          {request.status}
+        </span>
+
+        <select
+          value={request.approverId ?? ""}
+          disabled={request.status === "Approved"}
+          onChange={(event) =>
+            onAssignApprover(
+              request.id,
+              event.target.value
+            )
+          }
+        >
+          <option value="">
+            Select an approver
+          </option>
+
+          {approvers.map(approver => (
+            <option
+              key={approver.id}
+              value={approver.id}
+            >
+              {approver.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="actions">
+        {request.status === "Pending" && (
+          <button
+            className="approve-btn"
+            disabled={!hasApprover}
+            onClick={() =>
+              onUpdateStatus(
+                request.id,
+                "Approved"
+              )
+            }
+          >
+            Approve
+          </button>
+        )}
+
+        {request.status === "Approved" && (
+          <button
+            className="reopen-btn"
+            onClick={() =>
+              onUpdateStatus(
+                request.id,
+                "Pending"
+              )
+            }
+          >
+            Reopen
+          </button>
+        )}
+
+        <button
+          className="delete-btn"
+          onClick={() => onDelete(request.id)}
+        >
+          Delete
         </button>
- 
-
-      <button style={ {color: "red", background: "white"}} 
-      onClick={ () => onDeleteRequest(request.id)}>
-        Delete
-      </button>
+      </div>
     </div>
-    </li>
-    )
-}
+  );
+});
 
-export default memo(RequestRow);
+export default RequestRow;

@@ -1,202 +1,259 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import RequestRow from "./RequestRow";
-import ApproverList from "./ApproverList";
 
+import { useState, useEffect, useCallback } from "react";
+import RequestRow from "./RequestRow";
+import "./style.css";
+
+const STORAGE_KEY = "requests";
 
 const initialRequests = [
-  { id: 1, name: 'Reporting access', status: 'Pending' },
-  { id: 2, name: 'Add delegate', status: 'Pending' },
-  { id: 3, name: 'Export permission', status: 'Approved' },
+  {
+    id: 1,
+    name: "Reporting access",
+    status: "Pending",
+    approverId: ""
+  },
+  {
+    id: 2,
+    name: "Add delegate",
+    status: "Pending",
+    approverId: ""
+  },
+  {
+    id: 3,
+    name: "Export permission",
+    status: "Approved",
+    approverId: ""
+  }
 ];
 
 export default function App() {
-  // const [requests, setRequests] = useState(initialRequests)
-
- 
-  const [requests, setRequests] = useState( () => {
-    
+  // Load saved requests from localStorage
+  const [requests, setRequests] = useState(() => {
     try {
-      const savedRequests = localStorage.getItem("requests");
+      const saved = localStorage.getItem(STORAGE_KEY);
 
-      console.log("Loaded from localStorage:", savedRequests);
-      
-      if(savedRequests !== null) {
-        const parsedRequests = JSON.parse(savedRequests)
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
 
-        if(Array.isArray(parsedRequests)) {
-        return parsedRequests;
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
       }
-
-      }
-
-      
     } catch (error) {
-      console.error("Unable to load requests:", error)
+      console.error("Error loading requests:", error);
     }
 
     return initialRequests;
-  })
+  });
 
-  // state for input field
   const [requestName, setRequestName] = useState("");
-
-  // add error state
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [searchQuery, setSearchQuery] =useState("");
 
+  // API states
+  const [approvers, setApprovers] = useState([]);
+  const [loadingApprovers, setLoadingApprovers] = useState(true);
+  const [approverError, setApproverError] = useState("");
 
-   useEffect( () => {
-    console.log('saving request', requests)
-    console.log("useEffect executed - saving requests");
-    localStorage.setItem("requests", 
+  // Save requests to localStorage
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEY,
       JSON.stringify(requests)
-    )
+    );
+  }, [requests]);
 
-  }, [requests])
+  // Fetch approvers from API
+  useEffect(() => {
+    const controller = new AbortController();
 
-  // step 2 update request status 
+    async function fetchApprovers() {
+      try {
+        setLoadingApprovers(true);
+        setApproverError("");
 
+        const response = await fetch(
+          "https://jsonplaceholder.typicode.com/users",
+          { signal: controller.signal }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch approvers");
+        }
+
+        const data = await response.json();
+
+        if (!controller.signal.aborted) {
+          setApprovers(data);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setApproverError(error.message);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoadingApprovers(false);
+        }
+      }
+    }
+
+    fetchApprovers();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  // Approve or reopen a request
   const updateStatus = useCallback((id, status) => {
-    setRequests( (previousRequest) => 
-    previousRequest.map( (request) => 
-    request.id === id ?  {... request, status} : request ))
-  }, [])
+    setRequests(previousRequests =>
+      previousRequests.map(request =>
+        request.id === id
+          ? { ...request, status }
+          : request
+      )
+    );
+  }, []);
 
-  // add new request 
+  // Delete a request
+  const deleteRequest = useCallback((id) => {
+    setRequests(previousRequests =>
+      previousRequests.filter(request =>
+        request.id !== id
+      )
+    );
+  }, []);
+
+  // Assign an approver
+  const assignApprover = useCallback((requestId, approverId) => {
+    setRequests(previousRequests =>
+      previousRequests.map(request =>
+        request.id === requestId
+          ? { ...request, approverId }
+          : request
+      )
+    );
+  }, []);
+
+  // Add a new request
   function addRequest(event) {
     event.preventDefault();
-    if(requestName.trim() === '') {
-      setError('Request Name is required')
-      return
+
+    const trimmedName = requestName.trim();
+
+    if (!trimmedName) {
+      setError("Request name is required");
+      return;
     }
 
     const newRequest = {
       id: crypto.randomUUID(),
-      name: requestName.trim(),
-      status: 'Pending'
-    }
+      name: trimmedName,
+      status: "Pending",
+      approverId: ""
+    };
 
-    setRequests( previousRequest => [
-      ...previousRequest,
+    setRequests(previousRequests => [
+      ...previousRequests,
       newRequest
-    ] )
+    ]);
 
-    setRequestName("")
-    setError("")
-
+    setRequestName("");
+    setError("");
   }
 
-  const deleteRequest = useCallback( (id) => {
-    setRequests ( (previousRequest) => 
-      previousRequest.filter ( (request) => 
-        request.id !== id
-      )
-    )
-  }, [])
+  // Search and filter requests
+  const filteredRequests = requests.filter(request => {
+    const matchesSearch = request.name
+      .toLowerCase()
+      .includes(search.trim().toLowerCase());
 
-  // start using useMemo for  heavy computation 
-  const visibleRequests = useMemo( () => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const matchesStatus =
+      statusFilter === "All" ||
+      request.status === statusFilter;
 
-
-
-
-    return requests.filter(
-    (request) => {
-      const matchesStatus =  statusFilter === 'All' || request.status === statusFilter ;
-      const matchesSearch = request.name
-      .toLocaleLowerCase()
-      .includes(normalizedQuery)
-
-     return matchesStatus && matchesSearch
-
-    }
-  ) 
-
-
-  }, [requests, searchQuery, statusFilter])
-
-
-
+    return matchesSearch && matchesStatus;
+  });
 
   return (
-    
-<section className="request-panel">
-  <h2 className="request-heading">Request Approval</h2>
-  <header className="request-header">
-   <div className="request-filter">
-      <label htmlFor="">Filter by status</label>
-      <select 
-      id="status-filter"
-      value={statusFilter}
-      onChange = { (event) => setStatusFilter(event.target.value)}
-      >
-        <option value="All">All</option>
-        <option value="Pending">Pending</option>
-        <option value="Approved">Approved</option>
-      </select>
-    
-    </div>
+    <main className="app">
+      <h1>React Approval Lab</h1>
 
-    <div className="request-filter">
-     <label htmlFor="request-search">Search Requests</label>
-     <input 
-     id= 'request-search'
-     type="search"
-     placeholder="search by name"
-     value={searchQuery}
-     onChange={ (event) => setSearchQuery(event.target.value)}
-      />
-    
-    </div>
-  </header>
+      <h2>Add New Request</h2>
 
- <form onSubmit={addRequest}>
-  <input 
-  type="text" 
-  placeholder="Enter request"
-  value={ requestName } 
-  onChange={ (event) => {
-    setRequestName(event.target.value);
-    setError("");
-  }}
-   />
+      <form onSubmit={addRequest} className="request-form">
+        <input
+          type="text"
+          placeholder="Enter request name"
+          value={requestName}
+          onChange={(event) => {
+            setRequestName(event.target.value);
+            setError("");
+          }}
+        />
 
-   { error && (
-    <p style={{ color: "red" }}> {error}</p>
-   )}
+        <button type="submit">
+          Add Request
+        </button>
+      </form>
 
-  <button type="submit" disabled={!requestName.trim()}> Add Request</button>
- </form>
-  
-  <h2>Request list </h2>
- 
- {visibleRequests.length === 0 && (
-  <p className="request-empty">
-    {requests.length === 0
-      ? 'Add a request to get started.'
-      : 'No requests match your search and filter.'}
-  </p>
-)}
-  <ul className="request-list">
-  { visibleRequests.map( request => (
-    <RequestRow
-    key={request.id}
-    request={request}
-    onStatusChange={updateStatus}
-    onDeleteRequest={deleteRequest}
-    />
-  ))
+      {error && <p className="error">{error}</p>}
 
-  }
-  </ul>
+      <h2>Search and Filter</h2>
 
-   <p className="request-total" aria-live="polite">
-          Showing {visibleRequests.length} of {requests.length} requests
-        </p>
-    <ApproverList />
-  </section>
-  )
-  
+      <div className="filters">
+        <input
+          type="text"
+          placeholder="Search requests"
+          value={search}
+          onChange={(event) =>
+            setSearch(event.target.value)
+          }
+        />
+
+        <select
+          value={statusFilter}
+          onChange={(event) =>
+            setStatusFilter(event.target.value)
+          }
+        >
+          <option value="All">All</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+        </select>
+      </div>
+
+      <h2>Request List</h2>
+
+      {loadingApprovers && (
+        <p>Loading approvers...</p>
+      )}
+
+      {approverError && (
+        <p className="error">{approverError}</p>
+      )}
+
+      {filteredRequests.length === 0 ? (
+        <p>No requests found</p>
+      ) : (
+        <div className="request-list">
+          {filteredRequests.map(request => (
+            <RequestRow
+              key={request.id}
+              request={request}
+              approvers={approvers}
+              onUpdateStatus={updateStatus}
+              onDelete={deleteRequest}
+              onAssignApprover={assignApprover}
+            />
+          ))}
+        </div>
+      )}
+
+      <p className="total">
+        Total Requests: {requests.length}
+      </p>
+    </main>
+  );
 }
